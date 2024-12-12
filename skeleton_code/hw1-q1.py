@@ -46,8 +46,13 @@ class Perceptron(LinearModel):
         y_i (scalar): the gold label for that example
         other arguments are ignored
         """
-        raise NotImplementedError # Q1.1 (a)
+        w = self.W
+        y_hat = np.argmax(np.dot(w, x_i))
+        if y_hat != y_i:
+            w[y_i, :] += x_i
+            w[y_hat, :] -= x_i
 
+        self.W = w
 
 class LogisticRegression(LinearModel):
     def update_weight(self, x_i, y_i, learning_rate=0.001, l2_penalty=0.0, **kwargs):
@@ -55,8 +60,20 @@ class LogisticRegression(LinearModel):
         x_i (n_features): a single training example
         y_i: the gold label for that example
         learning_rate (float): keep it at the default value for your plots
+        l2_penalty (float): don't use this
         """
-        raise NotImplementedError # Q1.2 (a,b)
+        # version wihtout l2 regularization
+        w = self.W
+        y_hat = 1 / (1 + np.exp(-np.dot(w, x_i)))
+        y_one_hot = np.zeros_like(y_hat)
+        y_one_hot[y_i] = 1
+        gradient = np.outer((y_one_hot - y_hat), x_i)
+        w += learning_rate * gradient
+
+        # with l2 regularization
+        #w += learning_rate * gradient - (2 * l2_penalty * w)
+
+        self.W = w
 
 
 class MLP(object):
@@ -132,7 +149,7 @@ def main():
                         help="""Learning rate for parameter updates (needed for
                         logistic regression and MLP, but not perceptron)""")
     parser.add_argument('-l2_penalty', type=float, default=0.0,)
-    parser.add_argument('-data_path', type=str, default='intel_landscapes.npz',)
+    parser.add_argument('-data_path', type=str, default='skeleton_code/intel_landscapes.v2.npz',)
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)
