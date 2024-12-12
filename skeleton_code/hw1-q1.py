@@ -47,10 +47,10 @@ class Perceptron(LinearModel):
         other arguments are ignored
         """
         w = self.W
-        y_hat = np.argmax(np.dot(w, x_i))
+        y_hat = np.argmax(np.dot(w, x_i.T))
         if y_hat != y_i:
-            w[y_i, :] += x_i
-            w[y_hat, :] -= x_i
+            w[y_i] += x_i
+            w[y_hat] -= x_i
 
         self.W = w
 
@@ -62,18 +62,24 @@ class LogisticRegression(LinearModel):
         learning_rate (float): keep it at the default value for your plots
         l2_penalty (float): don't use this
         """
-        # version wihtout l2 regularization
+
         w = self.W
-        y_hat = 1 / (1 + np.exp(-np.dot(w, x_i)))
-        y_one_hot = np.zeros_like(y_hat)
+
+        # Get probability scores according to the model (num_labels x 1).
+        label_scores = np.expand_dims(w.dot(x_i), axis = 1)
+
+        # One-hot encode true label (num_labels x 1).
+        y_one_hot = np.zeros((np.size(w, 0),1))
         y_one_hot[y_i] = 1
-        gradient = np.outer((y_one_hot - y_hat), x_i)
-        w += learning_rate * gradient
 
-        # with l2 regularization
-        #w += learning_rate * gradient - (2 * l2_penalty * w)
-
-        self.W = w
+        # Softmax function
+        # This gives the label probabilities according to the model (num_labels x 1).
+        label_probabilities = np.exp(label_scores) / np.sum(np.exp(label_scores))
+        
+        # SGD update with L2 regularization
+        gradient = (y_one_hot - label_probabilities).dot(np.expand_dims(x_i, axis=1).T)
+        regularization = -l2_penalty * w
+        self.W = w + learning_rate * (gradient + regularization)
 
 
 class MLP(object):
@@ -149,7 +155,7 @@ def main():
                         help="""Learning rate for parameter updates (needed for
                         logistic regression and MLP, but not perceptron)""")
     parser.add_argument('-l2_penalty', type=float, default=0.0,)
-    parser.add_argument('-data_path', type=str, default='skeleton_code/intel_landscapes.v2.npz',)
+    parser.add_argument('-data_path', type=str, default='intel_landscapes.v2.npz',)
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)
@@ -217,6 +223,7 @@ def main():
             print('train acc: {:.4f} | val acc: {:.4f}'.format(
                  train_accs[-1], valid_accs[-1],
             ))
+
     elapsed_time = time.time() - start
     minutes = int(elapsed_time // 60)
     seconds = int(elapsed_time % 60)
