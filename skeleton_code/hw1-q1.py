@@ -85,12 +85,49 @@ class LogisticRegression(LinearModel):
 class MLP(object):
     def __init__(self, n_classes, n_features, hidden_size):
         # Initialize an MLP with a single hidden layer.
-        raise NotImplementedError # Q1.3 (a)
+        
+        # Initialize weights and biases
+        self.W1 = np.random.normal(0.1, 0.12, (hidden_size, n_features))  # Input to hidden layer weights
+        self.b1 = np.zeros((hidden_size, 1))  # Hidden layer biases
+        self.W2 = np.random.normal(0.1, 0.12, (n_classes, hidden_size))  # Hidden to output layer weights
+        self.b2 = np.zeros((n_classes, 1))  # Output layer biases
+
+    def relu(self, z):
+        # ReLU activation function.
+        return np.maximum(0, z)
+
+    def softmax(self, z):
+        # Softmax activation function.
+        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))  # Numerical stability
+        return exp_z / np.sum(exp_z, axis=0, keepdims=True)
+
+    def forward(self, x):
+        # Forward pass.
+        z1 = self.W1 @ x.T + self.b1  # Hidden layer linear transformation
+        a1 = self.relu(z1)  # Hidden layer activation
+        z2 = self.W2 @ a1 + self.b2  # Output layer linear transformation
+        a2 = self.softmax(z2)  # Output layer activation
+        return z1, a1, z2, a2
+
+    def backward(self, x, y_one_hot, z1, a1, z2, a2):
+        # Backward pass to compute gradients.
+        m = x.shape[0]  # Number of examples
+        dz2 = a2 - y_one_hot.T  # Gradient of output layer
+        dW2 = (dz2 @ a1.T) / m
+        db2 = np.sum(dz2, axis=1, keepdims=True) / m
+
+        da1 = self.W2.T @ dz2
+        dz1 = da1 * (z1 > 0)  # Gradient of ReLU
+        dW1 = (dz1 @ x) / m
+        db1 = np.sum(dz1, axis=1, keepdims=True) / m
+
+        return dW1, db1, dW2, db2
 
     def predict(self, X):
         # Compute the forward pass of the network. At prediction time, there is
         # no need to save the values of hidden nodes.
-        raise NotImplementedError # Q1.3 (a)
+        _, _, _, a2 = self.forward(X)
+        return np.argmax(a2, axis=0)
 
     def evaluate(self, X, y):
         """
@@ -104,10 +141,34 @@ class MLP(object):
         return n_correct / n_possible
 
     def train_epoch(self, X, y, learning_rate=0.001, **kwargs):
-        """
-        Dont forget to return the loss of the epoch.
-        """
-        raise NotImplementedError # Q1.3 (a)
+        m = X.shape[0]
+        loss = 0
+
+        for i in range(m):
+            x_i = X[i:i+1]  # Single example (1, n_features)
+            y_i = y[i]  # True label (scalar)
+            
+            # One-hot encode the label
+            y_one_hot = np.zeros((1, self.W2.shape[0]))
+            y_one_hot[0, y_i] = 1
+
+            # Forward pass
+            z1, a1, z2, a2 = self.forward(x_i)
+
+            # Compute loss
+            clipped_a2 = np.clip(a2, 1e-15, 1 - 1e-15)  # Clip probabilities
+            loss += -np.log(clipped_a2[y_i, 0])
+
+            # Backward pass
+            dW1, db1, dW2, db2 = self.backward(x_i, y_one_hot, z1, a1, z2, a2)
+
+            # SGD update
+            self.W1 -= learning_rate * dW1
+            self.b1 -= learning_rate * db1
+            self.W2 -= learning_rate * dW2
+            self.b2 -= learning_rate * db2
+
+        return loss / m
 
 
 def plot(epochs, train_accs, val_accs, filename=None):
