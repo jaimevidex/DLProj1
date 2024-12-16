@@ -47,10 +47,16 @@ class LogisticRegression(nn.Module):
         forward pass -- this is enough for it to figure out how to do the
         backward pass.
         """
+
+        my_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.to(my_device)
+        x = x.to(my_device)
+
         W = self.layer.weight
         b = self.layer.bias
+
         nn.CrossEntropyLoss(weight=W)
-        y = x @ W.t() + b
+        y = x.matmul(W.t()) + b
         return y
 
 
@@ -70,7 +76,22 @@ class FeedforwardNetwork(nn.Module):
         attributes that each FeedforwardNetwork instance has. Note that nn
         includes modules for several activation functions and dropout as well.
         """
-        super().__init__()
+        super(FeedforwardNetwork, self).__init__()
+
+        activation = {"relu": nn.ReLU}
+        self.activation = activation[activation_type]()
+        self.layers = nn.ModuleList()
+
+        self.layers.append(nn.Linear(n_features, hidden_size))
+        self.layers.append(activation[activation_type]())
+        self.layers.append(nn.Dropout(dropout))
+
+        for _ in range(layers - 1):
+            self.layers.append(nn.Linear(hidden_size, hidden_size))
+            self.layers.append(activation[activation_type]())
+            self.layers.append(nn.Dropout(dropout))
+
+        self.layers.append(nn.Linear(hidden_size, n_classes))
 
 
 
@@ -82,7 +103,13 @@ class FeedforwardNetwork(nn.Module):
         the output logits from x. This will include using various hidden
         layers, pointwise nonlinear functions, and dropout.
         """
-        pass
+
+        my_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.to(my_device)
+        
+        for layer in self.layers:
+            x = layer(x)
+        return x
 
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):
@@ -103,10 +130,12 @@ def train_batch(X, y, model, optimizer, criterion, **kwargs):
     This function should return the loss (tip: call loss.item()) to get the
     loss as a numerical value that is not part of the computation graph.
     """
+
+
     model.train()
     optimizer.zero_grad()
-    logits = model(X)
-    loss = criterion(logits, y)
+    y__ = model(X)
+    loss = criterion(y__, y)
     loss.backward()
     optimizer.step()
     return loss.item()

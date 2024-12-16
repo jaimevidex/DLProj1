@@ -1,0 +1,8 @@
+0.1 learning rate
+Final test acc: 0.4223
+
+0.001 learning rate
+Final test acc: 0.5247
+
+0.00001 learning rate
+Final test acc: 0.4623
