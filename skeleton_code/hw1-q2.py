@@ -6,6 +6,7 @@ import argparse
 
 import torch
 from torch.utils.data import DataLoader
+import torch.nn.functional as F
 import torch.nn as nn
 from matplotlib import pyplot as plt
 
@@ -79,12 +80,12 @@ class FeedforwardNetwork(nn.Module):
 
         self.layers.append(nn.Linear(n_features, hidden_size))
         self.layers.append(activation[activation_type]())
-        self.layers.append(nn.Dropout(dropout))
+        self.dropout = nn.Dropout(dropout)
 
         for _ in range(layers - 1):
             self.layers.append(nn.Linear(hidden_size, hidden_size))
             self.layers.append(activation[activation_type]())
-            self.layers.append(nn.Dropout(dropout))
+            self.dropout = nn.Dropout(dropout)
 
         self.layers.append(nn.Linear(hidden_size, n_classes))
 
@@ -110,7 +111,8 @@ class FeedforwardNetwork(nn.Module):
             x = self.dropout(P)
 
         # output layer
-        output_layer = nn.log_softmax(self.layers[-1](x), dim=1)
+        output_layer = nn.LogSoftmax(dim=1)
+        #output_layer = F.log_softmax(self.layers[-1](x), dim=1)
         return output_layer
 
 
