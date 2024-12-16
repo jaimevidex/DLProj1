@@ -47,10 +47,9 @@ class LogisticRegression(nn.Module):
         forward pass -- this is enough for it to figure out how to do the
         backward pass.
         """
-
         W = self.layer.weight
         b = self.layer.bias
-        nn.CrossEntropyLoss()
+        nn.CrossEntropyLoss(weight=W)
         y = x @ W.t() + b
         return y
 
@@ -73,7 +72,7 @@ class FeedforwardNetwork(nn.Module):
         """
         super().__init__()
 
-        
+
 
     def forward(self, x, **kwargs):
         """
