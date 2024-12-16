@@ -106,10 +106,20 @@ class FeedforwardNetwork(nn.Module):
 
         my_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.to(my_device)
-        
-        for layer in self.layers:
-            x = layer(x)
-        return x
+
+        # hidden layer pre-activation z(x) = W(1)x + b(1)
+        hidden_layers = self.layers[:-1]
+        h_x = x
+        for layer in hidden_layers:
+            Z = layer(h_x)
+            activation = self.activation(Z)
+            h_x = activation
+
+        # output layer
+        output_layer = self.layers[-1]
+        f_x = self.activation(output_layer(h_x))
+
+        return f_x
 
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):

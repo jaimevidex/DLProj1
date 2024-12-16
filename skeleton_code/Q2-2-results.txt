@@ -3,7 +3,7 @@
 Training took 3 minutes and 35 seconds
 Final test acc: 0.6100
 
-*Other version*
+*Other version 512*
 Training took 5 minutes and 50 seconds
 Final test acc: 0.5190
 menos variação e test loss e val loss quase coincidentes
