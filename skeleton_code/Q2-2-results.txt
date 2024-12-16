@@ -1,12 +1,11 @@
 (a)
 *Default hyperparameters*
-Training took 7 minutes and 39 seconds
-Final test acc: 0.6010
+Training took 0 minutes and 59 seconds
+Final test acc: 0.5963
 
 *Other version 512*
-Training took 6 minutes and 31 seconds
-Final test acc: 0.5177
-menos variação e test loss e val loss quase coincidentes
+Training took 0 minutes and 44 seconds
+Final test acc: 0.5097
 
 (b)
 *0.01 dropout*

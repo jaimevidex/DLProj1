@@ -62,30 +62,33 @@ class LogisticRegression(LinearModel):
         learning_rate (float): keep it at the default value for your plots
         l2_penalty (float): don't use this
         """
-
         w = self.W
 
-        # Get probability scores according to the model (num_labels x 1).
+        # Get probability scores according to the model (num_labels x 1)
         label_scores = np.expand_dims(w.dot(x_i), axis = 1)
 
-        # One-hot encode true label (num_labels x 1).
+        # One-hot encode true label (num_labels x 1)
         y_one_hot = np.zeros((np.size(w, 0),1))
         y_one_hot[y_i] = 1
 
-        # Softmax function
+        # Softmax function to get probabilities (num_labels x 1)
         # This gives the label probabilities according to the model (num_labels x 1).
         label_probabilities = np.exp(label_scores) / np.sum(np.exp(label_scores))
-        
+
         # SGD update with L2 regularization
         gradient = (y_one_hot - label_probabilities).dot(np.expand_dims(x_i, axis=1).T)
         regularization = -l2_penalty * w
         self.W = w + learning_rate * (gradient + regularization)
-
-
-class MLP(object):
-    def __init__(self, n_classes, n_features, hidden_size):
-        # Initialize an MLP with a single hidden layer.
         
+        # SGD update without L2 regularization
+        gradient = (y_one_hot - label_probabilities).dot(np.expand_dims(x_i, axis=1).T)
+        self.W = w + learning_rate * gradient
+        
+
+import numpy as np
+
+class MLP:
+    def __init__(self, n_classes, n_features, hidden_size):
         # Initialize weights and biases
         self.W1 = np.random.normal(0.1, 0.12, (hidden_size, n_features))  # Input to hidden layer weights
         self.b1 = np.zeros((hidden_size, 1))  # Hidden layer biases
@@ -93,83 +96,75 @@ class MLP(object):
         self.b2 = np.zeros((n_classes, 1))  # Output layer biases
 
     def relu(self, z):
-        # ReLU activation function.
         return np.maximum(0, z)
 
     def softmax(self, z):
-        # Softmax activation function.
-        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))  # Numerical stability
+        exp_z = np.exp(z - np.max(z, axis=0, keepdims=True))  # Stability trick
         return exp_z / np.sum(exp_z, axis=0, keepdims=True)
 
     def forward(self, x):
-        # Forward pass.
-        z1 = self.W1 @ x.T + self.b1  # Hidden layer linear transformation
-        a1 = self.relu(z1)  # Hidden layer activation
-        z2 = self.W2 @ a1 + self.b2  # Output layer linear transformation
-        a2 = self.softmax(z2)  # Output layer activation
-        return z1, a1, z2, a2
+        self.z1 = self.W1 @ x.T + self.b1  # Hidden layer linear
+        self.a1 = self.relu(self.z1)  # Hidden layer activation
+        self.z2 = self.W2 @ self.a1 + self.b2  # Output layer linear
+        self.a2 = self.softmax(self.z2)  # Output probabilities
+        return self.a2
 
-    def backward(self, x, y_one_hot, z1, a1, z2, a2):
-        # Backward pass to compute gradients.
-        m = x.shape[0]  # Number of examples
-        dz2 = a2 - y_one_hot.T  # Gradient of output layer
-        dW2 = (dz2 @ a1.T) / m
-        db2 = np.sum(dz2, axis=1, keepdims=True) / m
+    def backward(self, x, y_true):
+        m = x.shape[0]  # Batch size
 
+        # Gradients for output layer
+        y_true_onehot = np.zeros_like(self.a2)
+        y_true_onehot[y_true, np.arange(m)] = 1  # One-hot encode labels
+        dz2 = (self.a2 - y_true_onehot) / m
+        dW2 = dz2 @ self.a1.T
+        db2 = np.sum(dz2, axis=1, keepdims=True)
+
+        # Gradients for hidden layer
         da1 = self.W2.T @ dz2
-        dz1 = da1 * (z1 > 0)  # Gradient of ReLU
-        dW1 = (dz1 @ x) / m
-        db1 = np.sum(dz1, axis=1, keepdims=True) / m
+        dz1 = da1 * (self.z1 > 0)  # ReLU gradient
+        dW1 = dz1 @ x
+        db1 = np.sum(dz1, axis=1, keepdims=True)
 
         return dW1, db1, dW2, db2
 
-    def predict(self, X):
-        # Compute the forward pass of the network. At prediction time, there is
-        # no need to save the values of hidden nodes.
-        _, _, _, a2 = self.forward(X)
-        return np.argmax(a2, axis=0)
+    def compute_loss(self, y_true):
+        y_true_onehot = np.zeros_like(self.a2)
+        y_true_onehot[y_true, np.arange(y_true.shape[0])] = 1
+        loss = -np.sum(y_true_onehot * np.log(self.a2 + 1e-15)) / y_true.shape[0]
+        return loss
 
-    def evaluate(self, X, y):
-        """
-        X (n_examples x n_features)
-        y (n_examples): gold labels
-        """
-        # Identical to LinearModel.evaluate()
-        y_hat = self.predict(X)
-        n_correct = (y == y_hat).sum()
-        n_possible = y.shape[0]
-        return n_correct / n_possible
-
-    def train_epoch(self, X, y, learning_rate=0.001, **kwargs):
-        m = X.shape[0]
-        loss = 0
-
-        for i in range(m):
-            x_i = X[i:i+1]  # Single example (1, n_features)
-            y_i = y[i]  # True label (scalar)
-            
-            # One-hot encode the label
-            y_one_hot = np.zeros((1, self.W2.shape[0]))
-            y_one_hot[0, y_i] = 1
+    def train_epoch(self, X, y, learning_rate=0.001):
+        total_loss = 0
+        for i in range(X.shape[0]):
+            x_i = X[i:i+1]  # Single input
+            y_i = y[i]  # Single label
 
             # Forward pass
-            z1, a1, z2, a2 = self.forward(x_i)
+            self.forward(x_i)
 
             # Compute loss
-            clipped_a2 = np.clip(a2, 1e-15, 1 - 1e-15)  # Clip probabilities
-            loss += -np.log(clipped_a2[y_i, 0])
+            loss = self.compute_loss(np.array([y_i]))
+            total_loss += loss
 
-            # Backward pass
-            dW1, db1, dW2, db2 = self.backward(x_i, y_one_hot, z1, a1, z2, a2)
-
-            # SGD update
+            # Backward pass and update
+            dW1, db1, dW2, db2 = self.backward(x_i, y_i)
             self.W1 -= learning_rate * dW1
             self.b1 -= learning_rate * db1
             self.W2 -= learning_rate * dW2
             self.b2 -= learning_rate * db2
 
-        return loss / m
+        return total_loss / X.shape[0]
 
+    def predict(self, X):
+        predictions = []
+        for i in range(X.shape[0]):
+            probs = self.forward(X[i:i+1])
+            predictions.append(np.argmax(probs))
+        return np.array(predictions)
+
+    def evaluate(self, X, y):
+        y_pred = self.predict(X)
+        return np.mean(y == y_pred)
 
 def plot(epochs, train_accs, val_accs, filename=None):
     plt.xlabel('Epoch')
