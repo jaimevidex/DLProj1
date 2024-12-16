@@ -15,3 +15,35 @@ Final test acc: 0.5787
 Final test acc: 0.6037
 
 *0.5 dropout*
+Final test acc: 0.5677
+
+(c)
+*1024 momentum 0.0*
+Final test acc: 0.4583
+
+*1024 momentum 0.1*
+Final test acc: 0.4640
+
+*1024 momentum 0.2*
+Final test acc: 0.4670
+
+*1024 momentum 0.3*
+Final test acc: 0.4740
+
+*1024 momentum 0.4*
+Final test acc: 0.4793
+
+*1024 momentum 0.5*
+Final test acc: 0.4877
+
+*1024 momentum 0.6*
+Final test acc: 0.4953
+
+*1024 momentum 0.7*
+Final test acc: 0.5117
+
+*1024 momentum 0.8*
+Final test acc: 0.5287
+
+*1024 momentum 0.9*
+Final test acc: 0.5487
