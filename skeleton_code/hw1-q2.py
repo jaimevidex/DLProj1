@@ -107,7 +107,7 @@ class FeedforwardNetwork(nn.Module):
         my_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.to(my_device)
 
-        # hidden layer pre-activation z(x) = W(1)x + b(1)
+        # hidden layers
         hidden_layers = self.layers[:-1]
         h_x = x
         for layer in hidden_layers:
