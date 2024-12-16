@@ -26,12 +26,12 @@ class LogisticRegression(nn.Module):
         pytorch to make weights and biases, have a look at
         https://pytorch.org/docs/stable/nn.html
         """
-        super().__init__()
+        super(LogisticRegression, self).__init__()
         # In a pytorch module, the declarations of layers needs to come after
         # the super __init__ line, otherwise the magic doesn't work.
 
-        layer = nn.Linear(n_features, n_classes)
-        self.add_module('layer', layer)
+        self.layer = nn.Linear(n_features, n_classes)
+        self.activation = nn.Sigmoid()
 
     def forward(self, x, **kwargs):
         """
@@ -50,15 +50,10 @@ class LogisticRegression(nn.Module):
 
         my_device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.to(my_device)
-        x = x.to(my_device)
 
-        W = self.layer.weight
-        b = self.layer.bias
-
-        nn.CrossEntropyLoss(weight=W)
-        y = x.matmul(W.t()) + b
-        return y
-
+        Z = self.layer(x)
+        P = self.activation(Z)
+        return P
 
 class FeedforwardNetwork(nn.Module):
     def __init__(
@@ -109,17 +104,14 @@ class FeedforwardNetwork(nn.Module):
 
         # hidden layers
         hidden_layers = self.layers[:-1]
-        h_x = x
         for layer in hidden_layers:
-            Z = layer(h_x)
-            activation = self.activation(Z)
-            h_x = activation
+            Z = layer(x)
+            P = self.activation(Z)
+            x = self.dropout(P)
 
         # output layer
-        output_layer = self.layers[-1]
-        f_x = self.activation(output_layer(h_x))
-
-        return f_x
+        output_layer = nn.log_softmax(self.layers[-1](x), dim=1)
+        return output_layer
 
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):
