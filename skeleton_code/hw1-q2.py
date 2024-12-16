@@ -30,6 +30,9 @@ class LogisticRegression(nn.Module):
         # In a pytorch module, the declarations of layers needs to come after
         # the super __init__ line, otherwise the magic doesn't work.
 
+        layer = nn.Linear(n_features, n_classes)
+        self.add_module('layer', layer)
+
     def forward(self, x, **kwargs):
         """
         x (batch_size x n_features): a batch of training examples
@@ -44,7 +47,12 @@ class LogisticRegression(nn.Module):
         forward pass -- this is enough for it to figure out how to do the
         backward pass.
         """
-        raise NotImplementedError
+
+        W = self.layer.weight
+        b = self.layer.bias
+        nn.CrossEntropyLoss()
+        y = x @ W.t() + b
+        return y
 
 
 class FeedforwardNetwork(nn.Module):
@@ -64,8 +72,8 @@ class FeedforwardNetwork(nn.Module):
         includes modules for several activation functions and dropout as well.
         """
         super().__init__()
-        # Implement me!
-        raise NotImplementedError
+
+        
 
     def forward(self, x, **kwargs):
         """
@@ -75,7 +83,7 @@ class FeedforwardNetwork(nn.Module):
         the output logits from x. This will include using various hidden
         layers, pointwise nonlinear functions, and dropout.
         """
-        raise NotImplementedError
+        pass
 
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):
@@ -96,7 +104,13 @@ def train_batch(X, y, model, optimizer, criterion, **kwargs):
     This function should return the loss (tip: call loss.item()) to get the
     loss as a numerical value that is not part of the computation graph.
     """
-    raise NotImplementedError
+    model.train()
+    optimizer.zero_grad()
+    logits = model(X)
+    loss = criterion(logits, y)
+    loss.backward()
+    optimizer.step()
+    return loss.item()
 
 
 def predict(model, X):
@@ -159,7 +173,7 @@ def main():
                         choices=['tanh', 'relu'], default='relu')
     parser.add_argument('-optimizer',
                         choices=['sgd', 'adam'], default='sgd')
-    parser.add_argument('-data_path', type=str, default='intel_landscapes.npz',)
+    parser.add_argument('-data_path', type=str, default='skeleton_code/intel_landscapes.v2.npz',)
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)
