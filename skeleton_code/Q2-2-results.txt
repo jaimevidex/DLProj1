@@ -9,3 +9,10 @@ Final test acc: 0.5177
 menos variação e test loss e val loss quase coincidentes
 
 (b)
+*0.01 dropout*
+Final test acc: 0.5787
+
+*0.25 dropout*
+Final test acc: 0.6037
+
+*0.5 dropout*
