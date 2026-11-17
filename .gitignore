@@ -1,3 +1,5 @@
-Labs/
-skeleton_code/intel_landscapes.v2.npz
-skeleton_code/Archive.zip
+__pycache__/
+*.pyc
+*.pkl
+.DS_Store
+*.npz
