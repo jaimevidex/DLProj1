@@ -204,7 +204,7 @@ def main():
                         choices=['tanh', 'relu'], default='relu')
     parser.add_argument('-optimizer',
                         choices=['sgd', 'adam'], default='sgd')
-    parser.add_argument('-data_path', type=str, default='skeleton_code/intel_landscapes.v2.npz',)
+    parser.add_argument('-data_path', type=str, default='src/intel_landscapes.v2.npz',)
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)

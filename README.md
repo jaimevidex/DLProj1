@@ -1,24 +1,22 @@
-# Deep Learning — Homework 1
+# Neural Networks from Scratch
 
-Implementing the same classifiers twice: **once from scratch in NumPy**, then again in **PyTorch**, to see what the frameworks actually do for you.
-
-Built for the *Deep Learning* course at Instituto Superior Técnico.
+The same classifiers written twice: **once from scratch in NumPy**, then again in **PyTorch** — to see exactly what the frameworks do for you and where the numbers come from.
 
 ## What's implemented
 
-### Part 1 — from scratch (NumPy)
+### From scratch (NumPy)
 
 | Model | File |
 |---|---|
-| Perceptron | `skeleton_code/hw1-q1.py` |
-| Logistic regression (+ optional L2) | `skeleton_code/hw1-q1.py` |
-| Multi-layer perceptron | `skeleton_code/hw1-q1.py` |
+| Perceptron | `src/numpy_models.py` |
+| Logistic regression (+ optional L2) | `src/numpy_models.py` |
+| Multi-layer perceptron | `src/numpy_models.py` |
 
-No autograd, no `nn.Module` — forward passes, cross-entropy, backpropagation and the weight updates are written by hand.
+No autograd, no `nn.Module`: forward passes, cross-entropy, backpropagation and weight updates are written by hand.
 
-### Part 2 — the same models in PyTorch
+### The same models in PyTorch
 
-`skeleton_code/hw1-q2.py` reimplements logistic regression and an MLP with `torch.nn`, then uses the framework to sweep hyperparameters that would be painful to hand-roll.
+`src/torch_models.py` reimplements logistic regression and an MLP with `torch.nn`, then uses the framework to sweep hyperparameters that would be painful to hand-roll.
 
 ## Dataset
 
@@ -36,14 +34,14 @@ Intel Image Classification (`intel_landscapes.v2.npz`), a six-class landscape da
 | Logistic regression (PyTorch, lr 0.001) | 51.4% |
 | MLP (PyTorch, default hyperparameters) | 59.6% |
 
-The gap between the linear models and the MLP is the whole point of the exercise: the from-scratch implementation reproduces the framework's numbers, so the improvement comes from the model, not the library.
+The gap between the linear models and the MLP is the point: the from-scratch implementation reproduces the framework's numbers, so the improvement comes from the model, not the library.
 
 ## Run
 
 ```bash
-cd skeleton_code
-python hw1-q1.py -model mlp -epochs 20 -hidden_size 100
-python hw1-q2.py -model mlp -epochs 20
+cd src
+python numpy_models.py -model mlp -epochs 20 -hidden_size 100
+python torch_models.py -model mlp -epochs 20
 ```
 
 Useful flags: `-epochs`, `-learning_rate`, `-hidden_size`, `-l2_penalty`, `-batch_size`, `-data_path`.
@@ -51,16 +49,17 @@ Useful flags: `-epochs`, `-learning_rate`, `-hidden_size`, `-l2_penalty`, `-batc
 ## Structure
 
 ```
-skeleton_code/hw1-q1.py    NumPy models
-skeleton_code/hw1-q2.py    PyTorch models
-skeleton_code/utils.py     Dataset loading and batching
-*.pdf                      Training curves and weight-norm plots
-*-results*.txt             Recorded runs
-homework1.pdf              Assignment statement
+src/numpy_models.py     NumPy models
+src/torch_models.py     PyTorch models
+src/utils.py            Dataset loading and batching
+*.pdf                   Training curves and weight-norm plots
+*-results*.txt          Recorded runs
+problem-statement.pdf   Problem statement
+notes.md                Data and setup notes
 ```
 
 ## Notes
 
-- Requires `numpy`, `matplotlib` and (for part 2) `torch`.
+- Requires `numpy`, `matplotlib` and (for the PyTorch half) `torch`.
 - The `.npz` dataset is intentionally excluded from the repo.
-- The accompanying [Deep Learning coursework repo](https://github.com/jaimevidex/DL) contains Homework 2.
+- The companion repo [deep-learning-experiments](https://github.com/jaimevidex/deep-learning-experiments) covers CNNs, sequence models and attention.
